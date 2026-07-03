@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Article {
+  id          String    @id @default(cuid())
+  title       String
+  url         String    @unique
+  source      String
+  sourceLabel String    @default("") @map("source_label")
+  summary     String    @db.Text
+  content     String?   @db.Text
+  publishedAt DateTime  @map("published_at")
+  clusterId   String?   @map("cluster_id")
+  cluster     Cluster?  @relation(fields: [clusterId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([clusterId])
+  @@index([source])
+  @@index([publishedAt])
+  @@map("articles")
+}
+
+model Cluster {
+  id           String    @id @default(cuid())
+  label        String
+  articleCount Int       @default(0) @map("article_count")
+  startTime    DateTime  @map("start_time")
+  endTime      DateTime  @map("end_time")
+  articles     Article[]
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@index([startTime])
+  @@index([endTime])
+  @@map("clusters")
+}
+
+model IngestJob {
+  id          String    @id @default(cuid())
+  status      String    @default("pending")
+  startedAt   DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  error       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@map("ingest_jobs")
+}
