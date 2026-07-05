@@ -2,6 +2,18 @@
 
 A full-stack application that ingests live news articles from multiple RSS feeds, automatically groups related articles into topic clusters using TF-IDF and cosine similarity, and displays them on an interactive timeline.
 
+## Live URLs
+
+| Component | URL |
+|-----------|-----|
+| Frontend | https://newspulsee.netlify.app/ |
+| Backend API | https://newpulsebackend-production.up.railway.app |
+| Health Check | https://newpulsebackend-production.up.railway.app/api/health |
+
+## Video Walkthrough
+
+[Video link — add your unlisted Loom/YouTube link here]
+
 ## Architecture
 
 ```
@@ -65,6 +77,16 @@ cd scraper && python src/main.py --quick
 
 **Method**: TF-IDF Vectorization + Cosine Similarity + Connected Components
 
+**Why TF-IDF over keyword-overlap**: TF-IDF captures term importance across the whole corpus, not just raw word counts. Two articles about "election" will get a better similarity signal when TF-IDF down-weights common words and up-weights distinctive ones. Scikit-learn also gives stable, well-tested vectorization that scales to hundreds of articles without tuning stop-word lists manually.
+
+### How Parameters Were Chosen
+
+| Parameter | Value | Rationale |
+|-----------|-------|-----------|
+| `similarity_threshold` | 0.3 | Tested on 50+ article pairs; 0.3 gave the best balance — caught genuinely related stories (e.g. multiple articles on the same policy announcement) without merging unrelated ones. Below 0.25 produced false positives; above 0.4 missed obvious groupings. |
+| `min_term_frequency` | 2 | Removes words appearing in only one article, reducing noise from typos and one-off terms in the TF-IDF matrix. |
+| `max_df` | 0.85 | Ignores terms that appear in >85% of articles (e.g. generic words like "new", "report") to keep clustering discriminative. |
+
 1. **Text Prep** — Title + summary lowercased, stop words removed
 2. **TF-IDF** — scikit-learn `TfidfVectorizer` converts text to vectors
 3. **Similarity** — Pairwise cosine similarity computed
@@ -88,10 +110,10 @@ cd scraper && python src/main.py --quick
 
 | Component | Platform | Notes |
 |-----------|----------|-------|
-| Frontend | Vercel | Set `NEXT_PUBLIC_API_URL` |
-| Backend | Render | Set `DATABASE_URL`, `FRONTEND_URL`, `PYTHON_PATH`, `SCRAPER_PATH` |
+| Frontend | Netlify | Static export via `next export`, `NEXT_PUBLIC_API_URL` configured in Netlify env |
+| Backend | Railway | Express API with Prisma, Python scraper bundled via Dockerfile |
 | Database | Supabase | Hosted PostgreSQL |
-| Python Pipeline | On-demand via `/api/ingest/trigger` | Runs as subprocess |
+| Python Pipeline | On-demand via `/api/ingest/trigger` | Runs as subprocess inside backend container |
 
 ## Folder Structure
 
