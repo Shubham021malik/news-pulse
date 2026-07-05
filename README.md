@@ -12,7 +12,7 @@ A full-stack application that ingests live news articles from multiple RSS feeds
 
 ## Video Walkthrough
 
-[Video link — add your unlisted Loom/YouTube link here]
+https://youtu.be/m8tfQ9SbswM
 
 ## Architecture
 
